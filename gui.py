@@ -4,6 +4,7 @@ import tkinter as tk
 import datetime as dt
 from tkinter import filedialog as fd
 import tkcalendar as tkcal
+import locale
 
 # TODO: Add comments
 

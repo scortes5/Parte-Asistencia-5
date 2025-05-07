@@ -65,5 +65,16 @@ def settings():
 
 
 if __name__ == "__main__":
-    locale.setlocale(locale.LC_ALL, 'es_CL.utf8')
+    # Try different locale formats for different operating systems
+    try:
+        locale.setlocale(locale.LC_ALL, 'es_CL.utf8')  # Linux/macOS format
+    except locale.Error:
+        try:
+            locale.setlocale(locale.LC_ALL, 'es_CL.UTF-8')  # Alternative macOS format
+        except locale.Error:
+            try:
+                locale.setlocale(locale.LC_ALL, 'Spanish_Chile.1252')  # Windows format
+            except locale.Error:
+                # If all fails, use the system default
+                locale.setlocale(locale.LC_ALL, '')
     sys.exit(main())

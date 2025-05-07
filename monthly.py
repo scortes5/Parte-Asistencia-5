@@ -18,16 +18,31 @@ def generate() -> int:
 
     # TODO: Add comments
 
-    locale.setlocale(locale.LC_ALL, 'es_CL.utf8')
+    # Try different locale formats for different operating systems
+    try:
+        locale.setlocale(locale.LC_ALL, 'es_CL.utf8')  # Linux format
+    except locale.Error:
+        try:
+            locale.setlocale(locale.LC_ALL, 'es_CL.UTF-8')  # macOS format
+        except locale.Error:
+            try:
+                locale.setlocale(locale.LC_ALL, 'Spanish_Chile.1252')  # Windows format
+            except locale.Error:
+                # If all fails, use the system default
+                locale.setlocale(locale.LC_ALL, '')
 
     # Welcome
-    gui.show_message(title="Reportes mensuales",
-                     message="Se generarán de manera automática el cuadro mensual y el parte de asistencia, a partir "
-                             "del archivo que se puede descargar desde Quintanet.\n"
-                             "A continuación deberá cargar el archivo .xls obtenido en Quintanet. Es importante "
-                             "haber seleccionado las fechas correspondientes a un solo mes, y haber desmarcado "
-                             "la opción “Solo obligatorios”.",
-                     button_text="Cargar archivo")
+    gui.show_message(
+        title="Reportes mensuales",
+        message=(
+            "Se generarán de manera automática el cuadro mensual y el parte de asistencia, a partir "
+            "del archivo que se puede descargar desde Quintanet.\n"
+            "A continuación deberá cargar el archivo .xls obtenido en Quintanet. Es importante "
+            "haber seleccionado las fechas correspondientes a un solo mes, y haber desmarcado "
+            "la opción Solo obligatorios."
+        ),
+        button_text="Cargar archivo"
+    )
 
     # Ask user for Excel file path
     # Defaults to excel.html
@@ -69,7 +84,7 @@ def generate() -> int:
                              message=f"Se detectó una ROG el {day} a las {time}.\n"
                                      f"El reglamento de Compañía señala que todas las reuniones citadas por el "
                                      f"Directorio serán extraordinarias, por lo que se cambió automáticamente "
-                                     f"la “Reunión Ordinaria General” a “Reunión a Extraordinaria”."
+                                     f"la Reunión Ordinaria General a Reunión a Extraordinaria."
                              )
             df.rename(columns={act: f"{act[:19]}REG"}, inplace=True)
 
@@ -164,12 +179,12 @@ def generate() -> int:
     seniority_20 = df[df["Voluntario"] == config.last_with_20]["Ant."].values[0]
     df["Ant."] = pd.to_numeric(df["Ant."])
     for series_name, _ in df.iloc[:, 3:].items():
-        # Change “F” from volunteers with more than 20 years to “-”
+        # Change "F" from volunteers with more than 20 years to "-"
         df[series_name] = df[series_name].mask(
             (df["Ant."] <= seniority_20) & (df[series_name] == "F"), "-", inplace=False
         )
 
-        # Change “-” from honorary volunteers with less than 20 years to “F”
+        # Change "-" from honorary volunteers with less than 20 years to "F"
         if series_name[19:] in config.mandatory_for_honoraries:
             df[series_name] = df[series_name].mask(
                 (df["Ant."] > seniority_20)
@@ -178,7 +193,7 @@ def generate() -> int:
                 "F", inplace=False
             )
 
-        # Change “-” from officers to “F” (captain, lieutenants, assistants)
+        # Change "-" from officers to "F" (captain, lieutenants, assistants)
         if (series_name[19:] in config.dept_mandatory_acts
                 or series_name[19:] in config.comp_mandatory_acts):
             df[series_name] = df[series_name].mask(
@@ -192,7 +207,7 @@ def generate() -> int:
                 "F", inplace=False
             )
 
-        # Change “-” from officers to “F” (engineer)
+        # Change "-" from officers to "F" (engineer)
         if ((series_name[19:] in config.dept_mandatory_acts
              or series_name[19:] in config.comp_mandatory_acts)
                 and series_name[19:] not in ["FU", "RG"]):
@@ -202,7 +217,7 @@ def generate() -> int:
                 "F", inplace=False
             )
 
-        # Change “-” from officers to “F” (secretary, treasurer, intendent)
+        # Change "-" from officers to "F" (secretary, treasurer, intendent)
         if ((series_name[19:] in config.dept_mandatory_acts
              or series_name[19:] in config.comp_mandatory_acts)
                 and series_name[19:] not in ["FU", "RG", "EJ-GEN", "EJ", "10-34", "10-30"]):
@@ -285,8 +300,8 @@ def generate() -> int:
     ws.title = f"{dates[3].year}-{dates[3].month:02d}"
     ws["B1"] = "5.ª Compañía"
     ws["B2"] = "Cuadro Mensual"
-    month = f"{dates[3].strftime("%B")} del {dates[3].year}"[0].upper()
-    month += f"{dates[3].strftime("%B")} del {dates[3].year}"[1:]
+    month = f"{dates[3].strftime('%B')} del {dates[3].year}"
+    month = month[0].upper() + month[1:]
     ws["B3"] = month
     ws["B1"].font = openpyxl.styles.Font(bold=True, color="FFFFFF")
     ws["B2"].font = openpyxl.styles.Font(bold=True, color="FFFFFF")
